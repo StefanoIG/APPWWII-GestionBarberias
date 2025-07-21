@@ -17,6 +17,10 @@ class Cita extends Model
         return $this->belongsTo(User::class, 'cliente_id');
     }
 
+    public function barberia() {
+        return $this->belongsTo(Barberia::class);
+    }
+
     public function barbero() {
         return $this->belongsTo(Barbero::class);
     }
