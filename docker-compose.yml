@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # Servicio de la aplicación Laravel (PHP)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: barberia-app
+    restart: "no"
+    working_dir: /var/www/
+    volumes:
+      - C:\web2\APPWWII-GestionBarberias:/var/www
+      - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - barberia-network
+      - barberia-db-network
+    environment:
+      - DB_CONNECTION=pgsql
+      - DB_HOST=barberia-postgres-standalone
+      - DB_PORT=5432
+      - DB_DATABASE=barberia_db
+      - DB_USERNAME=barberia_user
+      - DB_PASSWORD=barberia_password
+
+  # Servidor Web (Nginx)
+  nginx:
+    image: nginx:alpine
+    container_name: barberia-nginx
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - C:\web2\APPWWII-GestionBarberias:/var/www
+      - ./docker/ngninx/app.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - barberia-network
+    depends_on:
+      - app
+
+networks:
+  barberia-network:
+    driver: bridge
+  barberia-db-network:
+    name: barberia-db-network
+    external: true

@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: barberia-postgres-standalone
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: barberia_db
+      POSTGRES_USER: barberia_user
+      POSTGRES_PASSWORD: barberia_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    volumes:
+      - postgres_data_standalone:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - barberia-db-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U barberia_user -d barberia_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+networks:
+  barberia-db-network:
+    name: barberia-db-network
+    driver: bridge
+
+volumes:
+  postgres_data_standalone:
+    name: barberia_postgres_data
