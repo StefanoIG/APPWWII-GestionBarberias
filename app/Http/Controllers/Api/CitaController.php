@@ -18,6 +18,60 @@ use Illuminate\Support\Facades\Storage;
 class CitaController extends Controller
 {
     use AuthorizesRequests;
+    
+    /**
+     * Listar citas según el rol del usuario
+     */
+    public function index(Request $request)
+    {
+        $user = Auth::user();
+        $userRole = $user->role ? $user->role->nombre : null;
+        
+        if ($userRole === 'cliente') {
+            // Clientes ven solo sus citas
+            $citas = Cita::where('cliente_id', $user->id)
+                ->with(['barberia', 'barbero.user', 'servicio'])
+                ->orderBy('fecha', 'desc')
+                ->get();
+        } elseif ($userRole === 'barbero') {
+            // Barberos ven solo las citas asignadas a ellos
+            $citas = Cita::where('barbero_id', $user->barbero->id)
+                ->with(['cliente', 'barberia', 'servicio'])
+                ->orderBy('fecha', 'desc')
+                ->get();
+        } elseif ($userRole === 'dueño') {
+            // Dueños ven las citas de su barbería
+            $citas = Cita::whereHas('barberia', function($query) use ($user) {
+                $query->where('owner_id', $user->id);
+            })
+            ->with(['cliente', 'barbero.user', 'servicio'])
+            ->orderBy('fecha', 'desc')
+            ->get();
+        } elseif ($userRole === 'admin') {
+            // Admins ven todas las citas
+            $citas = Cita::with(['cliente', 'barberia', 'barbero.user', 'servicio'])
+                ->orderBy('fecha', 'desc')
+                ->get();
+        } else {
+            // Para otros roles, devuelve array vacío
+            $citas = collect([]);
+        }
+        
+        return response()->json($citas);
+    }
+    
+    /**
+     * Listar todas las citas del sistema (solo para administradores)
+     */
+    public function adminIndex(Request $request)
+    {
+        $citas = Cita::with(['cliente', 'barberia', 'barbero.user', 'servicio'])
+            ->orderBy('fecha', 'desc')
+            ->get();
+            
+        return response()->json($citas);
+    }
+    
     public function store(StoreCitaRequest $request)
     {
         $validated = $request->validated();

@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 
 // Importar todos los controladores
 use App\Http\Controllers\Api\AuthController;
@@ -12,6 +13,7 @@ use App\Http\Controllers\Api\CitaController;
 use App\Http\Controllers\Api\ServicioController;
 use App\Http\Controllers\Api\HorarioController;
 use App\Http\Controllers\Api\CalificacionController;
+use App\Http\Controllers\Api\DashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -36,21 +38,55 @@ Route::get('/servicios/{servicio}', [ServicioController::class, 'show'])->name('
 Route::middleware('auth:sanctum')->group(function () {
     // Autenticación
     Route::post('/logout', [AuthController::class, 'logout']);
+    
+    // DEBUG: Verificar usuario autenticado (temporal)
+    Route::get('/debug/user', function() {
+        $user = Auth::user();
+        $userRole = $user && $user->role ? $user->role->nombre : null;
+        return response()->json([
+            'authenticated' => Auth::check(),
+            'user_id' => $user ? $user->id : null,
+            'user_email' => $user ? $user->email : null,
+            'user_role' => $userRole,
+            'role_id' => $user ? $user->role_id : null,
+            'role_data' => $user && $user->role ? $user->role : null
+        ]);
+    });
+    
+    // DEBUG: Probar middleware de admin
+    Route::get('/debug/admin-test', function() {
+        return response()->json(['message' => 'Admin middleware funciona correctamente']);
+    })->middleware('role:admin');
+    
+    // DEBUG: Probar middleware de dueño
+    Route::get('/debug/dueno-test', function() {
+        return response()->json(['message' => 'Dueño middleware funciona correctamente']);
+    })->middleware('role:dueño');
 
     // Barberías (Cualquier usuario autenticado puede verlas)
     Route::apiResource('barberias', BarberiaController::class)->except(['store', 'update', 'destroy']);
 
     // Citas (Lógica específica por rol)
     Route::prefix('citas')->group(function () {
-        Route::get('/', [CitaController::class, 'index']); // Cada rol ve sus citas
+        Route::get('/', [CitaController::class, 'index']); // Cada rol ve sus citas (incluye admin)
         Route::post('/', [CitaController::class, 'store'])->middleware('role:cliente');
         Route::post('/{cita}/cancelar', [CitaController::class, 'cancelar'])->middleware('role:cliente');
         Route::post('/{cita}/upload-comprobante', [CitaController::class, 'uploadComprobante'])->middleware('role:cliente');
         Route::post('/{cita}/completar', [CitaController::class, 'completar'])->middleware('role:barbero');
     });
     
+    // Barberos (Acceso general para consulta, gestión por roles específicos)
+    Route::get('/barberos', [BarberoController::class, 'index']); // Permite consulta general
+    
     // Calificaciones (Solo clientes)
     Route::post('/calificaciones', [CalificacionController::class, 'store'])->middleware('role:cliente');
+
+    // --- RUTAS DE DASHBOARD ---
+    // Para administradores y dueños
+    Route::middleware('role:admin,dueño')->group(function () {
+        Route::get('/dashboard/stats', [DashboardController::class, 'getStats']);
+        Route::get('/dashboard/citas-proximas', [DashboardController::class, 'getCitasProximas']);
+    });
 
     // --- RUTAS ESPECÍFICAS PARA DUEÑOS ---
     Route::middleware('role:dueño')->group(function () {
@@ -59,8 +95,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/barberias/{barberia}', [BarberiaController::class, 'update']);
         Route::delete('/barberias/{barberia}', [BarberiaController::class, 'destroy']);
         
-        // Gestión de Barberos de su barbería
-        Route::apiResource('barberos', BarberoController::class);
+        // Gestión de Barberos de su barbería (rutas específicas)
+        Route::post('/barberos', [BarberoController::class, 'store']);
+        Route::put('/barberos/{barbero}', [BarberoController::class, 'update']);
+        Route::delete('/barberos/{barbero}', [BarberoController::class, 'destroy']);
+        Route::get('/barberos/{barbero}', [BarberoController::class, 'show']);
         
         // Gestión de Servicios
         Route::post('/servicios', [ServicioController::class, 'store']);
@@ -86,7 +125,17 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/block', [AdminController::class, 'blockBarberia']);
         });
         
-        // El Admin puede ver todos los barberos, pero no gestionarlos directamente
-        Route::get('/barberos', [BarberoController::class, 'index']);
+        // El Admin puede gestionar barberos con rutas específicas de admin
+        Route::post('/admin/barberos', [BarberoController::class, 'store']);
+        Route::put('/admin/barberos/{barbero}', [BarberoController::class, 'update']);
+        Route::delete('/admin/barberos/{barbero}', [BarberoController::class, 'destroy']);
+        
+        // El Admin puede acceder a todas las citas del sistema
+        Route::get('/admin/citas', [CitaController::class, 'adminIndex']);
+        
+        // El Admin puede ver todas las barberías con gestión completa
+        Route::get('/admin/barberias', [BarberiaController::class, 'adminIndex']);
+        Route::put('/admin/barberias/{barberia}', [BarberiaController::class, 'update']);
+        Route::delete('/admin/barberias/{barberia}', [BarberiaController::class, 'destroy']);
     });
 });

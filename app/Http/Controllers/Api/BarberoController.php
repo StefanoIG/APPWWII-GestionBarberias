@@ -8,7 +8,8 @@ use App\Models\Barberia;
 use App\Models\User;
 use App\Models\Role;
 use App\Http\Requests\StoreBarberoRequest;
-use App\Http\Requests\UpdateBarberoRequest; // Asegúrate de crear este request
+use App\Http\Requests\UpdateBarberoRequest;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -23,17 +24,32 @@ class BarberoController extends Controller
     public function index()
     {
         $user = Auth::user();
-        // El dueño solo puede ver los barberos de su barbería
-        if ($user->role->nombre === 'dueño') {
+        $userRole = $user->role ? $user->role->nombre : null;
+        $barberia_id = request('barberia_id');
+        
+        if ($userRole === 'admin') {
+            // Admin puede ver todos los barberos o filtrar por barbería
+            if ($barberia_id) {
+                $barberos = Barbero::where('barberia_id', $barberia_id)
+                    ->with('user', 'servicios', 'barberia')->get();
+            } else {
+                $barberos = Barbero::with('user', 'servicios', 'barberia')->get();
+            }
+        } elseif ($userRole === 'dueño') {
+            // El dueño solo puede ver los barberos de su barbería
             $barberia = $user->barberia;
             if (!$barberia) {
                 return response()->json(['data' => []]);
             }
             $barberos = $barberia->barberos()->with('user', 'servicios')->get();
         } else {
-            // Un cliente o admin puede ver barberos de una barbería específica (requiere query param)
-            // Opcional: Implementar lógica para admin vea todos
-            $barberos = Barbero::with('user', 'servicios')->get();
+            // Clientes y otros roles pueden ver barberos de una barbería específica
+            if ($barberia_id) {
+                $barberos = Barbero::where('barberia_id', $barberia_id)
+                    ->with('user', 'servicios')->get();
+            } else {
+                $barberos = collect([]);
+            }
         }
 
         return response()->json($barberos);

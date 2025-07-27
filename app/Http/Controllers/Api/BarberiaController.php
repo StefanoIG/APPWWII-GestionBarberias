@@ -16,11 +16,25 @@ class BarberiaController extends Controller
     public function index()
     {
         $user = Auth::user();
-        if ($user->role->nombre === 'admin') {
+        $userRole = $user->role ? $user->role->nombre : null;
+        
+        if ($userRole === 'admin') {
             $barberias = Barberia::with('owner')->latest()->get();
         } else {
             $barberias = Barberia::where('owner_id', $user->id)->get();
         }
+        return response()->json($barberias);
+    }
+
+    /**
+     * Listar todas las barberías del sistema (solo para administradores)
+     */
+    public function adminIndex()
+    {
+        $barberias = Barberia::with(['owner', 'barberos.user', 'servicios'])
+            ->latest()
+            ->get();
+            
         return response()->json($barberias);
     }
 
