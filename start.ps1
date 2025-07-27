@@ -131,58 +131,54 @@ function Start-Application {
     if (Test-Path $backupPath) {
         $backups = Get-ChildItem -Path $backupPath -Filter "barberia_backup_*.sql" | Sort-Object LastWriteTime -Descending
         if ($backups.Count -gt 0) {
-            Write-Host "🔄 Restaurando desde backup automáticamente..." -ForegroundColor Cyan
-            Write-Host "📋 Usando backup: $($backups[0].Name)" -ForegroundColor Yellow
-            
+            Write-Host "Restaurando desde backup automáticamente..." -ForegroundColor Cyan
+            Write-Host ("Usando backup: {0}" -f $backups[0].Name) -ForegroundColor Yellow
             # Ejecutar restauración automática
-            & ".\docker\backup\restore-backup.ps1" -Force
-            
+            & ".\docker\backup\restore-backup.ps1" -Force:$true
             if ($LASTEXITCODE -eq 0) {
-                Write-Host "✅ Base de datos restaurada desde backup" -ForegroundColor Green
+                Write-Host "Base de datos restaurada desde backup" -ForegroundColor Green
             } else {
-                Write-Host "⚠️ Error en restauración, continuando con configuración normal..." -ForegroundColor Yellow
+                Write-Host "Error en restauración, continuando con configuración normal..." -ForegroundColor Yellow
                 # Ejecutar configuración inicial de Laravel como fallback
                 & ".\docker\scripts\init-laravel.ps1"
             }
         } else {
-            Write-Host "📝 No hay backups disponibles, ejecutando configuración inicial..." -ForegroundColor Yellow
-            # Ejecutar configuración inicial de Laravel
+            Write-Host "No hay backups disponibles, ejecutando configuración inicial..." -ForegroundColor Yellow
             & ".\docker\scripts\init-laravel.ps1"
         }
     } else {
-        Write-Host "📁 Directorio de backups no existe, ejecutando configuración inicial..." -ForegroundColor Yellow
-        # Ejecutar configuración inicial de Laravel
+        Write-Host "Directorio de backups no existe, ejecutando configuración inicial..." -ForegroundColor Yellow
         & ".\docker\scripts\init-laravel.ps1"
     }
-    
-    Write-Host @"
 
-✅ Aplicación iniciada exitosamente!
+    $msg = @"
+Aplicación iniciada exitosamente!
 
-🌐 Servicios disponibles:
+Servicios disponibles:
   • Aplicación Web: http://localhost:8000
   • Base de datos PostgreSQL: localhost:5432 (contenedor independiente)
-    - Base de datos: barberia_db
-    - Usuario: barberia_user
-    - Contraseña: barberia_password
+    • Base de datos: barberia_db
+    • Usuario: barberia_user
+    • Contraseña: barberia_password
 
-💾 Sistema de Backup:
+Sistema de Backup:
   • Backups automáticos cada hora
   • Auto-restauración al iniciar
   • Gestión: .\backup-manager.ps1
 
-🔧 Comandos útiles:
+Comandos útiles:
   • Ver logs app: .\start.ps1 -Logs
   • Conectar DB: cd C:\pgsql-barberias; .\db-manager.ps1 -Connect
   • Detener app: .\start.ps1 -Down
   • Detener DB: cd C:\pgsql-barberias; .\db-manager.ps1 -Stop
   • Reiniciar todo: .\start.ps1 -Fresh
   • Gestionar backups: .\backup-manager.ps1
-  
-🐛 Para debugging:
+
+Para debugging:
   • docker-compose -f docker-compose.yml logs -f app
   • docker exec -it barberia-app bash
-"@ -ForegroundColor Green
+"@
+    Write-Host $msg -ForegroundColor Green
 }
 
 function Show-Logs {
