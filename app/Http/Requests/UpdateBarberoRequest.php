@@ -11,7 +11,9 @@ class UpdateBarberoRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        $barbero = $this->route('barbero');
+        // Permitir si el usuario autenticado es el dueño de la barbería del barbero
+        return $barbero && $this->user()->id === $barbero->barberia->owner_id;
     }
 
     /**
