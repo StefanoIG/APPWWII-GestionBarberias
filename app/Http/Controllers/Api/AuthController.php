@@ -58,12 +58,19 @@ class AuthController extends Controller
         $user = $request->user();
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        return response()->json([
+        $response = [
             'message' => 'Inicio de sesión exitoso',
             'access_token' => $token,
             'token_type' => 'Bearer',
-            'user' => $user->load('role') // Cargar el rol del usuario
-        ]);
+            'user' => $user->load('role')
+        ];
+
+        // Si el usuario es barbero, incluir el id del barbero
+        if ($user->role && $user->role->nombre === 'barbero' && $user->barbero) {
+            $response['barbero_id'] = $user->barbero->id;
+        }
+
+        return response()->json($response);
     }
 
     /**

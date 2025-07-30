@@ -38,30 +38,7 @@ Route::get('/servicios/{servicio}', [ServicioController::class, 'show'])->name('
 Route::middleware('auth:sanctum')->group(function () {
     // Autenticación
     Route::post('/logout', [AuthController::class, 'logout']);
-    
-    // DEBUG: Verificar usuario autenticado (temporal)
-    Route::get('/debug/user', function() {
-        $user = Auth::user();
-        $userRole = $user && $user->role ? $user->role->nombre : null;
-        return response()->json([
-            'authenticated' => Auth::check(),
-            'user_id' => $user ? $user->id : null,
-            'user_email' => $user ? $user->email : null,
-            'user_role' => $userRole,
-            'role_id' => $user ? $user->role_id : null,
-            'role_data' => $user && $user->role ? $user->role : null
-        ]);
-    });
-    
-    // DEBUG: Probar middleware de admin
-    Route::get('/debug/admin-test', function() {
-        return response()->json(['message' => 'Admin middleware funciona correctamente']);
-    })->middleware('role:admin');
-    
-    // DEBUG: Probar middleware de dueño
-    Route::get('/debug/dueno-test', function() {
-        return response()->json(['message' => 'Dueño middleware funciona correctamente']);
-    })->middleware('role:dueño');
+
 
     // Barberías (Cualquier usuario autenticado puede verlas)
     Route::apiResource('barberias', BarberiaController::class)->except(['store', 'update', 'destroy']);
@@ -123,12 +100,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/approve', [AdminController::class, 'approveBarberia']);
             Route::post('/reject', [AdminController::class, 'rejectBarberia']);
             Route::post('/block', [AdminController::class, 'blockBarberia']);
-        });
-        
-        // El Admin puede gestionar barberos con rutas específicas de admin
-        Route::post('/admin/barberos', [BarberoController::class, 'store']);
-        Route::put('/admin/barberos/{barbero}', [BarberoController::class, 'update']);
-        Route::delete('/admin/barberos/{barbero}', [BarberoController::class, 'destroy']);
+        });      
         
         // El Admin puede acceder a todas las citas del sistema
         Route::get('/admin/citas', [CitaController::class, 'adminIndex']);

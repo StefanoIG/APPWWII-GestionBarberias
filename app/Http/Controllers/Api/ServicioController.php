@@ -21,7 +21,9 @@ class ServicioController extends Controller
     public function index(Request $request)
     {
         $request->validate(['barberia_id' => 'required|exists:barberias,id']);
-        $servicios = Servicio::where('barberia_id', $request->barberia_id)->get();
+        $servicios = Servicio::where('barberia_id', $request->barberia_id)
+            ->with(['barberos.user'])
+            ->get();
         return response()->json($servicios);
     }
 
@@ -43,6 +45,7 @@ class ServicioController extends Controller
      */
     public function show(Servicio $servicio)
     {
+        $servicio->load(['barberos.user']);
         return response()->json($servicio);
     }
 

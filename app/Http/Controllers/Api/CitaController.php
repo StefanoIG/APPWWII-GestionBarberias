@@ -15,9 +15,29 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
+
 class CitaController extends Controller
 {
     use AuthorizesRequests;
+
+    /**
+     * Marcar una cita como completada (solo barbero asignado puede hacerlo)
+     */
+    public function completar(Cita $cita)
+    {
+        $this->authorize('update', $cita); // Solo el barbero asignado puede completar
+
+        if ($cita->estado !== 'confirmada') {
+            return response()->json(['message' => 'Solo se pueden completar citas confirmadas.'], 400);
+        }
+
+        $cita->update(['estado' => 'completada']);
+
+        // Aquí podrías disparar un evento de CitaCompletada si lo deseas
+        // \App\Events\CitaCompletada::dispatch($cita);
+
+        return response()->json(['message' => 'Cita marcada como completada.']);
+    }
     
     /**
      * Listar citas según el rol del usuario
@@ -183,4 +203,6 @@ class CitaController extends Controller
 
         return response()->json(['message' => 'Pago rechazado.']);
     }
+
+
 }

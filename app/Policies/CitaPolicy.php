@@ -25,7 +25,8 @@ class CitaPolicy
      */
     public function update(User $user, Cita $cita): bool
     {
-        return $user->id === $cita->cliente_id;
+        return $user->id === $cita->cliente_id
+            || ($cita->barbero && $user->id === $cita->barbero->user_id);
     }
 
     /**
