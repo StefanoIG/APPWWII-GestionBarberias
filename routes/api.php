@@ -100,6 +100,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/approve', [AdminController::class, 'approveBarberia']);
             Route::post('/reject', [AdminController::class, 'rejectBarberia']);
             Route::post('/block', [AdminController::class, 'blockBarberia']);
+            Route::get('/users', [AdminController::class, 'index']);
         });      
         
         // El Admin puede acceder a todas las citas del sistema

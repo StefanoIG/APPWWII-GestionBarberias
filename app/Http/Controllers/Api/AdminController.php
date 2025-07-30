@@ -6,7 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Barberia;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-
+use App\Models\User;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\StoreBarberiaRequest;
 class AdminController extends Controller
 {
     /**
@@ -20,6 +23,14 @@ class AdminController extends Controller
             'message' => 'Barbería aprobada exitosamente',
             'barberia' => $barberia
         ]);
+    }
+
+    // metodo que devuelva todos los usuarios disponibles// solo para administradores
+    public function index(Request $request)
+    {
+        $this->authorize('viewAny', User::class);
+        $users = User::with('role')->get();
+        return response()->json($users);
     }
     
     /**

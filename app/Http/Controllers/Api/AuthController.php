@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 
+
 class AuthController extends Controller
 {
     /**
@@ -84,4 +85,6 @@ class AuthController extends Controller
             'message' => 'Sesión cerrada exitosamente.'
         ]);
     }
+
+    
 }
