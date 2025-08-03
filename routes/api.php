@@ -38,6 +38,7 @@ Route::get('/servicios/{servicio}', [ServicioController::class, 'show'])->name('
 Route::middleware('auth:sanctum')->group(function () {
     // Autenticación
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::put('/usuario', [AuthController::class, 'update']);
 
 
     // Barberías (Cualquier usuario autenticado puede verlas)

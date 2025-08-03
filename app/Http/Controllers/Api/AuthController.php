@@ -14,6 +14,37 @@ use Illuminate\Validation\Rules\Password;
 class AuthController extends Controller
 {
     /**
+     * Actualiza los datos del usuario autenticado.
+     */
+    public function update(Request $request)
+    {
+        $user = User::find(Auth::id());
+        $request->validate([
+            'nombre' => 'sometimes|string|max:255',
+            'email' => 'sometimes|string|email|max:255|unique:users,email,' . $user->id,
+            'telefono' => 'sometimes|string|min:10|max:15',
+            'password' => ['sometimes', 'confirmed', Password::defaults()],
+        ]);
+        if ($request->has('nombre')) {
+            $user->nombre = $request->nombre;
+        }
+        if ($request->has('email')) {
+            $user->email = $request->email;
+            $user->email_verified_at = null; // Reiniciar verificación de email
+        }
+        if ($request->has('telefono')) {
+            $user->telefono = $request->telefono;
+        }
+        if ($request->has('password')) {
+            $user->password = Hash::make($request->password);
+        }
+        $user->save();
+        return response()->json([
+            'message' => 'Usuario actualizado exitosamente.',
+            'user' => $user->fresh('role')
+        ]);
+    }
+    /**
      * Registra un nuevo usuario (por defecto, como cliente).
      */
     public function register(Request $request)
@@ -86,5 +117,4 @@ class AuthController extends Controller
         ]);
     }
 
-    
 }

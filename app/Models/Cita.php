@@ -24,6 +24,8 @@ class Cita extends Model
     public function barbero() {
         return $this->belongsTo(Barbero::class);
     }
+
+    //
     
     public function servicio() {
         return $this->belongsTo(Servicio::class);

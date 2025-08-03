@@ -50,13 +50,13 @@ class CitaController extends Controller
         if ($userRole === 'cliente') {
             // Clientes ven solo sus citas
             $citas = Cita::where('cliente_id', $user->id)
-                ->with(['barberia', 'barbero.user', 'servicio'])
+                ->with(['barberia', 'barbero.user', 'servicio', 'calificacion'])
                 ->orderBy('fecha', 'desc')
                 ->get();
         } elseif ($userRole === 'barbero') {
             // Barberos ven solo las citas asignadas a ellos
             $citas = Cita::where('barbero_id', $user->barbero->id)
-                ->with(['cliente', 'barberia', 'servicio'])
+                ->with(['cliente', 'barberia', 'servicio', 'calificacion'])
                 ->orderBy('fecha', 'desc')
                 ->get();
         } elseif ($userRole === 'dueño') {
@@ -64,20 +64,28 @@ class CitaController extends Controller
             $citas = Cita::whereHas('barberia', function($query) use ($user) {
                 $query->where('owner_id', $user->id);
             })
-            ->with(['cliente', 'barbero.user', 'servicio'])
+            ->with(['cliente', 'barbero.user', 'servicio', 'calificacion'])
             ->orderBy('fecha', 'desc')
             ->get();
         } elseif ($userRole === 'admin') {
             // Admins ven todas las citas
-            $citas = Cita::with(['cliente', 'barberia', 'barbero.user', 'servicio'])
+            $citas = Cita::with(['cliente', 'barberia', 'barbero.user', 'servicio', 'calificacion'])
                 ->orderBy('fecha', 'desc')
                 ->get();
         } else {
             // Para otros roles, devuelve array vacío
             $citas = collect([]);
         }
-        
         return response()->json($citas);
+    }
+
+    /**
+     * Mostrar una cita específica con su calificación si existe
+     */
+    public function show(Cita $cita)
+    {
+        $cita->load(['cliente', 'barberia', 'barbero.user', 'servicio', 'calificacion']);
+        return response()->json($cita);
     }
     
     /**
