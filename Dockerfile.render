@@ -1,0 +1,21 @@
+# Dockerfile para Render con nginx-php-fpm
+FROM richarvey/nginx-php-fpm:3.1.6
+
+# Copiar archivos de la aplicación
+COPY . /var/www/html/
+
+# Configurar permisos
+RUN chown -R nginx:nginx /var/www/html
+
+# Configurar nginx
+COPY nginx.conf /etc/nginx/sites-available/default.conf
+
+# Exponer puerto 80 para Render
+EXPOSE 80
+
+# Usar el script de deploy
+COPY deploy.sh /var/www/html/deploy.sh
+RUN chmod +x /var/www/html/deploy.sh
+
+# Comando de inicio
+CMD ["/start.sh"]

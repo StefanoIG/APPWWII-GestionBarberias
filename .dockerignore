@@ -1,0 +1,50 @@
+# Ignorar archivos de desarrollo
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Ignorar archivos de sistema
+.DS_Store
+Thumbs.db
+*.log
+
+# Ignorar archivos de configuración local
+.env
+.env.local
+.env.testing
+docker-compose.yml
+docker-compose-db.yml
+docker/
+
+# Ignorar archivos de cache y build
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+bootstrap/cache/*
+!storage/logs/.gitkeep
+!storage/framework/cache/.gitkeep
+!storage/framework/sessions/.gitkeep
+!storage/framework/views/.gitkeep
+!bootstrap/cache/.gitkeep
+
+# Ignorar archivos de desarrollo y testing
+tests/
+phpunit.xml
+webpack.mix.js
+package.json
+package-lock.json
+
+# Ignorar scripts de Windows
+*.ps1
+*.bat
+iniciar.bat
+
+# Ignorar archivos SSL locales
+docker/ssl/
+ssl_certs/
+
+# Ignorar documentación local
+README-WINDOWS.md
+backup-*.ps1
